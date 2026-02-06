@@ -1,3 +1,4 @@
+⚠️🚨 This is entirely vibe code slop, but it was useful so I wanted to share 🥀 🚨⚠️
 # Framework Laptop 13 Speaker EQ (Linux)
 
 Improve the internal speaker sound quality on the Framework Laptop 13 using [EasyEffects](https://github.com/wwmm/easyeffects) on PipeWire.
