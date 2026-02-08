@@ -90,6 +90,30 @@ else
     echo "    WARNING: Could not find Easy Effects sink. Open EasyEffects and set it as default output manually."
 fi
 
+echo "==> Installing volume-sync service..."
+# EasyEffects ignores the virtual sink's volume, so the OS volume keys do nothing.
+# This service mirrors volume/mute changes from the EE sink to the hardware sink.
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+install -Dm755 "$SCRIPT_DIR/ee-volume-sync" "$HOME/.local/bin/ee-volume-sync"
+
+mkdir -p "$HOME/.config/systemd/user"
+cat > "$HOME/.config/systemd/user/ee-volume-sync.service" << 'SERVICE'
+[Unit]
+Description=Sync EasyEffects sink volume to hardware sink
+After=pipewire.service
+
+[Service]
+ExecStart=%h/.local/bin/ee-volume-sync
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target
+SERVICE
+
+systemctl --user daemon-reload
+systemctl --user enable --now ee-volume-sync.service
+
 echo ""
 echo "Done! To verify, run:"
 echo "  wpctl status | grep -A3 'Sinks:'"

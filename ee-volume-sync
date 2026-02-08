@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# Syncs EasyEffects sink volume/mute to the hardware sink.
+# Discovers sinks dynamically so it survives reboots and hardware changes.
+
+EE_SINK="easyeffects_sink"
+
+find_hw_sink() {
+    # The hardware sink is any non-easyeffects RUNNING or IDLE sink
+    pactl list sinks short 2>/dev/null \
+        | grep -v easyeffects \
+        | awk '{print $2}' \
+        | head -1
+}
+
+wait_for_sinks() {
+    while true; do
+        if pactl list sinks short 2>/dev/null | grep -q "$EE_SINK"; then
+            HW_SINK=$(find_hw_sink)
+            if [[ -n "$HW_SINK" ]]; then
+                return
+            fi
+        fi
+        sleep 2
+    done
+}
+
+get_vol() { pactl get-sink-volume "$1" 2>/dev/null | grep -oP '\d+%' | head -1; }
+get_mute() { pactl get-sink-mute "$1" 2>/dev/null | awk '{print $2}'; }
+
+while true; do
+    wait_for_sinks
+
+    last_vol=""
+    last_mute=""
+
+    pactl subscribe 2>/dev/null | while read -r line; do
+        [[ "$line" == *"'change' on sink"* ]] || continue
+
+        # Re-check hw sink is still valid
+        if ! pactl list sinks short 2>/dev/null | grep -q "$HW_SINK"; then
+            break
+        fi
+
+        vol=$(get_vol "$EE_SINK")
+        mute=$(get_mute "$EE_SINK")
+
+        [[ -z "$vol" ]] && break  # EE sink gone, re-discover
+
+        if [[ "$vol" != "$last_vol" ]]; then
+            pactl set-sink-volume "$HW_SINK" "$vol"
+            last_vol="$vol"
+        fi
+
+        if [[ "$mute" != "$last_mute" ]]; then
+            if [[ "$mute" == "yes" ]]; then
+                pactl set-sink-mute "$HW_SINK" 1
+            else
+                pactl set-sink-mute "$HW_SINK" 0
+            fi
+            last_mute="$mute"
+        fi
+    done
+
+    # If we get here, something broke (PipeWire restart, EE restart, etc.)
+    # Loop back and re-discover sinks
+    sleep 2
+done

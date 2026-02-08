@@ -35,6 +35,7 @@ The script will:
 3. Configure auto-start on login
 4. Launch EasyEffects and load the preset
 5. Route audio through EasyEffects
+6. Install a volume-sync service so hardware volume keys work correctly
 
 ## Verify
 
@@ -78,6 +79,17 @@ wpctl status | grep -A3 "Sinks:"
 
 # Increase hardware volume (adjust percentage to taste)
 wpctl set-volume <SINK_ID> 60%
+```
+
+**Volume keys/slider do nothing:**
+The desktop volume controls target the default sink, which is now the EasyEffects virtual sink. EasyEffects doesn't attenuate audio based on its sink volume — it passes processed audio straight to the hardware sink. The setup script installs a background service (`ee-volume-sync`) that mirrors volume/mute changes from the EasyEffects sink to the hardware sink automatically. If you need to reinstall it manually:
+
+```bash
+# The service should already be running
+systemctl --user status ee-volume-sync
+
+# If not, re-enable it
+systemctl --user enable --now ee-volume-sync
 ```
 
 **EQ resets after reboot:**
