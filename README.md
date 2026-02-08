@@ -69,6 +69,17 @@ wpctl set-default "$EE_SINK"
 **"Preset not loaded correctly" error:**
 The preset JSON requires bands nested under `"left"` and `"right"` objects. Bands placed directly under the equalizer object will fail on EasyEffects 8.x.
 
+**Sound leaks through when muted or volume is at zero:**
+Do not increase the EasyEffects output gain (the dB slider at the right side of the EQ graph) to make things louder. EasyEffects applies output gain after the OS volume control, so its DSP noise floor gets amplified and sent to the hardware sink even when muted. Instead, increase the hardware sink volume:
+
+```bash
+# Check current volume (look for the non-EasyEffects sink)
+wpctl status | grep -A3 "Sinks:"
+
+# Increase hardware volume (adjust percentage to taste)
+wpctl set-volume <SINK_ID> 60%
+```
+
 **EQ resets after reboot:**
 Check that `~/.config/autostart/com.github.wwmm.easyeffects.desktop` exists and includes `-l Framework-13-Speakers`.
 
