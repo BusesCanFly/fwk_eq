@@ -3,7 +3,7 @@
 
 Improve the internal speaker sound quality on the Framework Laptop 13 using [EasyEffects](https://github.com/wwmm/easyeffects) on PipeWire.
 
-This uses [Kieran Levin's EQ profile](https://community.frame.work/t/speakers-sound-quality/1078?page=3), created by a Framework engineer who measured the actual frequency response of the FW13 speakers. The corrections target known hardware defects — not subjective preference:
+This uses [Kieran Levin's EQ profile](https://community.frame.work/t/speakers-sound-quality/1078?page=3)
 
 | Band | Freq | Type | Gain | Why |
 |------|------|------|------|-----|
